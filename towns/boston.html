@@ -401,14 +401,14 @@ const NEIGHBORHOODS = {
 <!-- Chart library + rendering engine -->
 <script src="../assets/js/report-charts.js"></script>
 <script>
+document.addEventListener('chartjs-ready', function() {
+
+  // ── Helpers ────────────────────────────────────────────────────────────
   const fmtM  = v => v >= 1e6 ? '$'+(v/1e6).toFixed(2)+'M' : v ? '$'+(v/1000).toFixed(0)+'K' : '—';
   const last  = a => a[a.length-1];
   const prev  = a => a[a.length-2];
   const pct   = (a,b) => b ? ((a-b)/b*100).toFixed(1) : null;
-  const empty = a => !a || a.every(v=>!v);
-
-  // Chart instance registry — so we can destroy before re-creating
-  const chartRegistry = {};
+  const empty = a => !a || a.every(v => !v);
 
   function priceRange(d) {
     const all = [...d.avgSale,...d.medSale,...d.avgList].filter(Boolean);
@@ -421,51 +421,68 @@ const NEIGHBORHOODS = {
     if (!all.length) return [95,110];
     return [Math.floor(Math.min(...all)-2), Math.ceil(Math.max(...all)+2)];
   }
-
   function makeId(nbhd, type, chart) { return `${nbhd}__${type}__${chart}`; }
 
-  function destroyChart(id) {
-    if (chartRegistry[id]) { chartRegistry[id].destroy(); delete chartRegistry[id]; }
+  // ── KPI helpers ─────────────────────────────────────────────────────────
+  function setEl(id, val) { const e=document.getElementById(id); if(e) e.textContent=val; }
+  function setChg(id, label, isDown) {
+    const e=document.getElementById(id);
+    if(!e) return;
+    e.textContent=label;
+    e.className='kpi-change'+(isDown?' down':'');
+  }
+  function fillKpis(slug, type, d) {
+    if (empty(d.avgSale)) return;
+    const pre=makeId(slug,type,'');
+    const a=last(d.avgSale), ap=prev(d.avgSale);
+    const m=last(d.medSale), mp=prev(d.medSale);
+    const r=last(d.ratio), dom=last(d.dom), domp=prev(d.dom);
+    setEl(pre+'kpi-avg', fmtM(a));
+    setEl(pre+'kpi-med', fmtM(m));
+    setEl(pre+'kpi-ratio', r ? r.toFixed(1)+'%' : '—');
+    setEl(pre+'kpi-dom', dom ? dom+' days' : '—');
+    if(ap){const d1=pct(a,ap); setChg(pre+'kpi-avg-chg',`${+d1>0?'↑':'↓'} vs prior quarter`,+d1<0);}
+    if(mp){const d2=pct(m,mp); setChg(pre+'kpi-med-chg',`${+d2>0?'↑':'↓'} quarter over quarter`,+d2<0);}
+    if(r){
+      const lbl=r>=101?"Sellers' market":r>=99?'Near asking':"Buyers' market";
+      const e=document.getElementById(pre+'kpi-ratio-lbl');
+      if(e){e.textContent=lbl;e.className='kpi-change neutral';}
+    }
+    if(dom&&domp){const dd=pct(dom,domp);setChg(pre+'kpi-dom-lbl',`${+dd>0?'↑':'↓'} vs prior quarter`,+dd>0);}
   }
 
-  // Override RasnerCharts to track instances
-  const _origPrice = RasnerCharts.makePrice;
-  const _origRatio = RasnerCharts.makeRatio;
-  const _origSold  = RasnerCharts.makeSold;
-  const _origDom   = RasnerCharts.makeDom;
-
-  // Build the HTML for one property-type section inside a panel
+  // ── HTML builders ───────────────────────────────────────────────────────
   function sectionHTML(nbhd, type, typeName, unitLabel) {
-    const idPre = makeId(nbhd, type, '');
+    const p = makeId(nbhd,type,'');
     return `
-      <div class="report-section ${type === 'sf' ? 'active' : ''}" id="nbhd-section-${nbhd}-${type}">
+      <div class="report-section ${type==='sf'?'active':''}" id="nbhd-section-${nbhd}-${type}">
         <div class="kpi-strip">
           <div class="kpi dark">
             <div class="kpi-label">Latest Avg Sale Price</div>
-            <div class="kpi-value" id="${idPre}kpi-avg">—</div>
-            <div class="kpi-change" id="${idPre}kpi-avg-chg"></div>
+            <div class="kpi-value" id="${p}kpi-avg">—</div>
+            <div class="kpi-change" id="${p}kpi-avg-chg"></div>
           </div>
           <div class="kpi">
             <div class="kpi-label">Latest Median Sale</div>
-            <div class="kpi-value" id="${idPre}kpi-med">—</div>
-            <div class="kpi-change" id="${idPre}kpi-med-chg"></div>
+            <div class="kpi-value" id="${p}kpi-med">—</div>
+            <div class="kpi-change" id="${p}kpi-med-chg"></div>
           </div>
           <div class="kpi">
             <div class="kpi-label">Sale-to-List Ratio</div>
-            <div class="kpi-value" id="${idPre}kpi-ratio">—</div>
-            <div class="kpi-change" id="${idPre}kpi-ratio-lbl"></div>
+            <div class="kpi-value" id="${p}kpi-ratio">—</div>
+            <div class="kpi-change" id="${p}kpi-ratio-lbl"></div>
           </div>
           <div class="kpi">
             <div class="kpi-label">Avg Days on Market</div>
-            <div class="kpi-value" id="${idPre}kpi-dom">—</div>
-            <div class="kpi-change" id="${idPre}kpi-dom-lbl"></div>
+            <div class="kpi-value" id="${p}kpi-dom">—</div>
+            <div class="kpi-change" id="${p}kpi-dom-lbl"></div>
           </div>
         </div>
         <div class="chart-grid wide">
           <div class="card">
             <div class="card-label">Pricing Trends</div>
             <div class="card-title">Average &amp; Median Sale Price</div>
-            <div class="chart-wrap"><canvas id="${idPre}price"></canvas></div>
+            <div class="chart-wrap"><canvas id="${p}price"></canvas></div>
             <div class="legend-row">
               <div class="legend-item"><div class="legend-dot" style="background:#295c6f"></div>Avg Sale</div>
               <div class="legend-item"><div class="legend-dot" style="background:#71a495"></div>Median Sale</div>
@@ -475,7 +492,7 @@ const NEIGHBORHOODS = {
           <div class="card">
             <div class="card-label">Offer Competitiveness</div>
             <div class="card-title">Sale-to-List Ratio</div>
-            <div class="chart-wrap"><canvas id="${idPre}ratio"></canvas></div>
+            <div class="chart-wrap"><canvas id="${p}ratio"></canvas></div>
             <div class="chart-note">Values above 100% indicate overbidding.</div>
           </div>
         </div>
@@ -483,12 +500,12 @@ const NEIGHBORHOODS = {
           <div class="card">
             <div class="card-label">Market Activity</div>
             <div class="card-title">${unitLabel} Sold per Quarter</div>
-            <div class="chart-wrap"><canvas id="${idPre}sold"></canvas></div>
+            <div class="chart-wrap"><canvas id="${p}sold"></canvas></div>
           </div>
           <div class="card">
             <div class="card-label">Time on Market</div>
             <div class="card-title">Days on Market vs Days to Offer</div>
-            <div class="chart-wrap"><canvas id="${idPre}dom"></canvas></div>
+            <div class="chart-wrap"><canvas id="${p}dom"></canvas></div>
             <div class="legend-row">
               <div class="legend-item"><div class="legend-dot" style="background:#295c6f"></div>Days on Market</div>
               <div class="legend-item"><div class="legend-dot" style="background:#71a495"></div>Days to Offer</div>
@@ -503,49 +520,44 @@ const NEIGHBORHOODS = {
       <div class="nbhd-placeholder">
         <div class="nbhd-placeholder-icon">📍</div>
         <h3>${name}</h3>
-        <p>Market data for this neighborhood will be available soon. Contact us to request a specific report.</p>
-        <a href="mailto:ilya@rasnergroup.com?subject=Boston ${name} Market Report" style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;color:var(--teal-dark);border:1px solid var(--teal-dark);padding:8px 18px;transition:all 0.18s;">Request Data</a>
+        <p>Market data for this neighborhood will be available soon.</p>
+        <a href="mailto:ilya@rasnergroup.com?subject=Boston ${name} Market Report"
+           style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;color:var(--teal-dark);border:1px solid var(--teal-dark);padding:8px 18px;">Request Data</a>
       </div>`;
   }
 
-
-  // KPI fill helpers
-  function setEl(id, val) { const e=document.getElementById(id); if(e) e.textContent=val; }
-  function setChg(id, label, isDown) {
-    const e=document.getElementById(id);
-    if(!e) return;
-    e.textContent=label;
-    e.className='kpi-change'+(isDown?' down':'');
+  // ── Build panels ────────────────────────────────────────────────────────
+  const panelWrap = document.getElementById('nbhd-panels');
+  let firstPanel = true;
+  for (const [slug, nbhd] of Object.entries(NEIGHBORHOODS)) {
+    const hasData = !empty(nbhd.sf.avgSale) || !empty(nbhd.condo.avgSale) || !empty(nbhd.mf.avgSale);
+    const div = document.createElement('div');
+    div.className = 'nbhd-panel' + (firstPanel ? ' active' : '');
+    div.id = `panel-${slug}`;
+    div.innerHTML = `
+      <div class="nbhd-panel-header">
+        <div>
+          <div class="eyebrow">Boston, MA</div>
+          <h2>${nbhd.name}</h2>
+        </div>
+        <div class="nbhd-panel-meta">Q1 2025 – Q1 2026<br />MLS Closed Sales</div>
+      </div>
+      ${hasData
+        ? sectionHTML(slug,'sf','Single Family','Homes') + sectionHTML(slug,'condo','Condos','Units') + sectionHTML(slug,'mf','Multi-Family','Properties')
+        : placeholderHTML(nbhd.name)
+      }`;
+    panelWrap.appendChild(div);
+    firstPanel = false;
   }
 
-  function fillKpis(nbhd, type, d) {
-    if (empty(d.avgSale)) return;
-    const pre = makeId(nbhd, type, '');
-    const a=last(d.avgSale), ap=prev(d.avgSale);
-    const m=last(d.medSale), mp=prev(d.medSale);
-    const r=last(d.ratio), dom=last(d.dom), domp=prev(d.dom);
-    setEl(pre+'kpi-avg', fmtM(a));
-    setEl(pre+'kpi-med', fmtM(m));
-    setEl(pre+'kpi-ratio', r ? r.toFixed(1)+'%' : '—');
-    setEl(pre+'kpi-dom', dom ? dom+' days' : '—');
-    if (ap) { const d1=pct(a,ap); setChg(pre+'kpi-avg-chg', `${+d1>0?'↑':'↓'} vs prior quarter`, +d1<0); }
-    if (mp) { const d2=pct(m,mp); setChg(pre+'kpi-med-chg', `${+d2>0?'↑':'↓'} quarter over quarter`, +d2<0); }
-    if (r) {
-      const lbl = r>=101 ? "Sellers' market" : r>=99 ? 'Near asking' : "Buyers' market";
-      const e=document.getElementById(pre+'kpi-ratio-lbl');
-      if(e){ e.textContent=lbl; e.className='kpi-change neutral'; }
-    }
-    if (dom&&domp) { const dd=pct(dom,domp); setChg(pre+'kpi-dom-lbl',`${+dd>0?'↑':'↓'} vs prior quarter`,+dd>0); }
-  }
-
-  // Draw charts for one neighborhood (called once when first activated)
+  // ── Chart rendering (lazy) ──────────────────────────────────────────────
   const rendered = new Set();
   function renderNeighborhood(slug) {
     if (rendered.has(slug)) return;
     rendered.add(slug);
     const nbhd = NEIGHBORHOODS[slug];
     if (!nbhd) return;
-    [['sf','sf'],['condo','condo'],['mf','mf']].forEach(([type]) => {
+    [['sf'],['condo'],['mf']].forEach(([type]) => {
       const d = nbhd[type];
       if (empty(d.avgSale)) return;
       fillKpis(slug, type, d);
@@ -559,73 +571,38 @@ const NEIGHBORHOODS = {
     });
   }
 
-  // Activate the first neighborhood on load
-  document.addEventListener('chartjs-ready', function() {
-  // Build & inject all panels on load
-  const panelWrap = document.getElementById('nbhd-panels');
-  let firstPanel = true;
-  for (const [slug, nbhd] of Object.entries(NEIGHBORHOODS)) {
-    const hasData = !empty(nbhd.sf.avgSale) || !empty(nbhd.condo.avgSale) || !empty(nbhd.mf.avgSale);
-    const panelDiv = document.createElement('div');
-    panelDiv.className = 'nbhd-panel' + (firstPanel ? ' active' : '');
-    panelDiv.id = `panel-${slug}`;
-    panelDiv.innerHTML = `
-      <div class="nbhd-panel-header">
-        <div>
-          <div class="eyebrow">Boston, MA</div>
-          <h2>${nbhd.name}</h2>
-        </div>
-        <div class="nbhd-panel-meta">Q1 2025 – Q1 2026<br />MLS Closed Sales</div>
-      </div>
-      ${hasData
-        ? sectionHTML(slug,'sf','Single Family','Homes') + sectionHTML(slug,'condo','Condos','Units') + sectionHTML(slug,'mf','Multi-Family','Properties')
-        : placeholderHTML(nbhd.name)
-      }`;
-    panelWrap.appendChild(panelDiv);
-    firstPanel = false;
-  }
-
+  // Render first neighborhood
   renderNeighborhood('allston');
 
-  // ── Neighborhood sidebar clicks ──────────────────────────────────────────
-  document.querySelectorAll('.nbhd-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const slug = btn.dataset.nbhd;
-
-      // Sidebar active state
-      document.querySelectorAll('.nbhd-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-
-      // Panel swap
-      document.querySelectorAll('.nbhd-panel').forEach(p => p.classList.remove('active'));
-      const panel = document.getElementById(`panel-${slug}`);
-      if (panel) {
-        panel.classList.add('active');
-        // Reset to SF tab when switching neighborhood
-        activePropertyType = 'sf';
-        syncPropertyTabs(panel);
-      }
-
-      // Lazy-render charts
-      renderNeighborhood(slug);
-    });
-  });
-
-  // ── Property type tabs ───────────────────────────────────────────────────
+  // ── Sidebar clicks ──────────────────────────────────────────────────────
   let activePropertyType = 'sf';
 
   function syncPropertyTabs(panel) {
-    // Update tab buttons
     document.querySelectorAll('.nav-tab').forEach(t => {
       t.classList.toggle('active', t.dataset.section === activePropertyType);
     });
-    // Show matching section inside the active panel
     if (!panel) return;
     panel.querySelectorAll('.report-section').forEach(s => s.classList.remove('active'));
     const activeSlug = document.querySelector('.nbhd-btn.active')?.dataset.nbhd;
     const sec = document.getElementById(`nbhd-section-${activeSlug}-${activePropertyType}`);
     if (sec) sec.classList.add('active');
   }
+
+  document.querySelectorAll('.nbhd-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const slug = btn.dataset.nbhd;
+      document.querySelectorAll('.nbhd-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.nbhd-panel').forEach(p => p.classList.remove('active'));
+      const panel = document.getElementById(`panel-${slug}`);
+      if (panel) {
+        panel.classList.add('active');
+        activePropertyType = 'sf';
+        syncPropertyTabs(panel);
+      }
+      renderNeighborhood(slug);
+    });
+  });
 
   document.querySelectorAll('.nav-tab').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -634,8 +611,8 @@ const NEIGHBORHOODS = {
       syncPropertyTabs(activePanel);
     });
   });
-  }); // end chartjs-ready
-</script>
 
+}); // end chartjs-ready
+</script>
 </body>
 </html>
