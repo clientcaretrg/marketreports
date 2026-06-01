@@ -568,6 +568,7 @@ const NEIGHBORHOODS = {
   }
 
   // Activate the first neighborhood on load
+  window.addEventListener('load', function() {
   renderNeighborhood('allston');
 
   // ── Neighborhood sidebar clicks ──────────────────────────────────────────
@@ -617,6 +618,7 @@ const NEIGHBORHOODS = {
       syncPropertyTabs(activePanel);
     });
   });
+  }); // end window load
 </script>
 
 </body>

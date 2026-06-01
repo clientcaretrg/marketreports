@@ -293,6 +293,7 @@ const MF = {
 <!-- ── CHART LIBRARY + INIT ── -->
 <script src="../assets/js/report-charts.js"></script>
 <script>
+  window.addEventListener('load', function() {
   // Helpers
   const fmtM = v => v >= 1e6 ? '$'+(v/1e6).toFixed(2)+'M' : v ? '$'+(v/1000).toFixed(0)+'K' : '—';
   const last  = arr => arr[arr.length - 1];
@@ -369,6 +370,7 @@ const MF = {
   });
 
   RasnerCharts.initTabs();
+  }); // end load
 </script>
 
 </body>
