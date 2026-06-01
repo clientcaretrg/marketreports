@@ -26,6 +26,7 @@ const TOWNS = [
   { slug:'boston-hyde-park',        name:'Hyde Park',                       region:'Boston', latestQuarter:'Q1 2026' },
   { slug:'boston-jamaica-plain',    name:'Jamaica Plain',                   region:'Boston', latestQuarter:'Q1 2026' },
   { slug:'boston-downtown',         name:'Downtown',                        region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-mattapan',         name:'Mattapan',                        region:'Boston', latestQuarter:'Q1 2026' },
   { slug:'boston-mission-hill',     name:'Mission Hill',                    region:'Boston', latestQuarter:'Q1 2026' },
   { slug:'boston-north-end',        name:'North End',                       region:'Boston', latestQuarter:'Q1 2026' },
   { slug:'boston-roslindale',       name:'Roslindale',                      region:'Boston', latestQuarter:'Q1 2026' },
