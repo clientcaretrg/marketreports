@@ -27,7 +27,19 @@
   <title>[[TOWN_NAME]] Market Report — The Rasner Group</title>
   <meta name="description" content="Quarterly real estate market report for [[TOWN_NAME]], [[STATE]] — The Rasner Group." />
   <link rel="stylesheet" href="../assets/css/style.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script>
+(function() {
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+  s.onload = function() {
+    Chart.defaults.font.family = "'DM Sans', sans-serif";
+    Chart.defaults.font.size   = 11;
+    Chart.defaults.color       = '#7a8a87';
+    document.dispatchEvent(new Event('chartjs-ready'));
+  };
+  document.head.appendChild(s);
+})();
+</script>
 </head>
 <body>
 
@@ -293,85 +305,63 @@ const MF = {
 <!-- ── CHART LIBRARY + INIT ── -->
 <script src="../assets/js/report-charts.js"></script>
 <script>
-  window.addEventListener('load', function() {
-  // Helpers
+document.addEventListener('chartjs-ready', function() {
+
   const fmtM = v => v >= 1e6 ? '$'+(v/1e6).toFixed(2)+'M' : v ? '$'+(v/1000).toFixed(0)+'K' : '—';
   const last  = arr => arr[arr.length - 1];
   const prev  = arr => arr[arr.length - 2];
   const pct   = (a,b) => b ? ((a-b)/b*100).toFixed(1) : null;
 
-  function fillKpis(prefix, d) {
-    const a = last(d.avgSale),  ap = prev(d.avgSale);
-    const m = last(d.medSale),  mp = prev(d.medSale);
-    const r = last(d.ratio);
-    const dom = last(d.dom),    domp = prev(d.dom);
-
+  function fillKpis(prefix, d) {{
+    const a=last(d.avgSale), ap=prev(d.avgSale);
+    const m=last(d.medSale), mp=prev(d.medSale);
+    const r=last(d.ratio), dom=last(d.dom), domp=prev(d.dom);
+    const set = (id,v) => {{ const e=document.getElementById(id); if(e) e.textContent=v; }};
+    const chg = (id,lbl,down) => {{
+      const e=document.getElementById(id);
+      if(!e) return;
+      e.textContent=lbl; e.className='kpi-change'+(down?' down':'');
+    }};
     set(prefix+'-kpi-avg', fmtM(a));
     set(prefix+'-kpi-med', fmtM(m));
     set(prefix+'-kpi-ratio', r ? r.toFixed(1)+'%' : '—');
     set(prefix+'-kpi-dom', dom ? dom+' days' : '—');
+    if(ap){{const d1=pct(a,ap); chg(prefix+'-kpi-avg-chg',`${{+d1>0?'↑':'↓'}} vs prior quarter`,+d1<0);}}
+    if(mp){{const d2=pct(m,mp); chg(prefix+'-kpi-med-chg',`${{+d2>0?'↑':'↓'}} quarter over quarter`,+d2<0);}}
+    if(r){{
+      const lbl=r>=101?"Sellers' market":r>=99?'Near asking':"Buyers' market";
+      const e=document.getElementById(prefix+'-kpi-ratio-lbl');
+      if(e){{e.textContent=lbl;e.className='kpi-change neutral';}}
+    }}
+    if(dom&&domp){{const dd=pct(dom,domp);chg(prefix+'-kpi-dom-lbl',`${{+dd>0?'↑':'↓'}} vs prior quarter`,+dd>0);}}
+  }}
 
-    if (ap) {
-      const d1 = pct(a,ap);
-      setChg(prefix+'-kpi-avg-chg', d1, `${d1>0?'↑':'↓'} vs prior quarter`, d1 < 0);
-    }
-    if (mp) {
-      const d2 = pct(m,mp);
-      setChg(prefix+'-kpi-med-chg', d2, `${d2>0?'↑':'↓'} quarter over quarter`, d2 < 0);
-    }
-    if (r) {
-      const label = r >= 101 ? "Sellers' market" : r >= 99 ? 'Near asking' : 'Buyers\' market';
-      const el = document.getElementById(prefix+'-kpi-ratio-lbl');
-      if (el) { el.textContent = label; el.className = 'kpi-change neutral'; }
-    }
-    if (dom && domp) {
-      const dd = pct(dom, domp);
-      setChg(prefix+'-kpi-dom-lbl', dd, `${dd>0?'↑':'↓'} vs prior quarter`, dd > 0);
-    }
-  }
+  function autoRange(d) {{
+    const all=[...d.avgSale,...d.medSale,...d.avgList].filter(Boolean);
+    if(!all.length) return [0,1000000];
+    const mn=Math.min(...all),mx=Math.max(...all),pad=(mx-mn)*0.15||mx*0.2;
+    return [Math.max(0,Math.floor((mn-pad)/50000)*50000),Math.ceil((mx+pad)/50000)*50000];
+  }}
+  function ratioRange(d) {{
+    const all=d.ratio.filter(Boolean);
+    if(!all.length) return [95,110];
+    return [Math.floor(Math.min(...all)-2),Math.ceil(Math.max(...all)+2)];
+  }}
 
-  function set(id, val) {
-    const el = document.getElementById(id);
-    if (el) el.textContent = val;
-  }
-  function setChg(id, val, label, isDown) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.textContent = label;
-    el.className = 'kpi-change' + (isDown ? ' down' : '');
-  }
-
-  // Auto-range helpers
-  function priceRange(d) {
-    const all = [...d.avgSale, ...d.medSale, ...d.avgList].filter(Boolean);
-    if (!all.length) return [0, 1000000];
-    const mn = Math.min(...all), mx = Math.max(...all);
-    const pad = (mx - mn) * 0.15 || mx * 0.2;
-    return [Math.max(0, Math.floor((mn - pad) / 50000) * 50000),
-                       Math.ceil((mx + pad) / 50000) * 50000];
-  }
-  function ratioRange(d) {
-    const all = d.ratio.filter(Boolean);
-    if (!all.length) return [95, 110];
-    const mn = Math.min(...all), mx = Math.max(...all);
-    return [Math.floor(mn - 2), Math.ceil(mx + 2)];
-  }
-
-  // Render
-  const types = [['sf', SF], ['condo', CONDO], ['mf', MF]];
-  types.forEach(([p, d]) => {
+  const types = [['sf',SF],['condo',CONDO],['mf',MF]];
+  types.forEach(([p,d]) => {{
     fillKpis(p, d);
-    const [pMin, pMax] = priceRange(d);
-    const [rMin, rMax] = ratioRange(d);
+    const [pMin,pMax]=autoRange(d);
+    const [rMin,rMax]=ratioRange(d);
     RasnerCharts.makePrice(p+'-price', d, pMin, pMax);
     RasnerCharts.makeRatio(p+'-ratio', d, rMin, rMax);
     RasnerCharts.makeSold(p+'-sold', d);
     RasnerCharts.makeDom(p+'-dom', d);
-  });
+  }});
 
   RasnerCharts.initTabs();
-  }); // end load
-</script>
 
+}}); // end chartjs-ready
+</script>
 </body>
 </html>
