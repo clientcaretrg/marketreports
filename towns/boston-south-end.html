@@ -9,7 +9,7 @@
   ────────────────────────────────────────────────────────────────────────────
   1. Copy this file to towns/<slug>.html   (e.g. towns/newton.html)
   2. Do a Find & Replace for every token wrapped in [[ ]] below:
-       Downtown         → Newton
+       South End / Bay Village         → Newton
        Boston, MA             → MA
        [[SLUG]]              → newton
        Q1 2025 – Q1 2026        → Q1 2025 – Q1 2026
@@ -24,8 +24,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Downtown Market Report — The Rasner Group</title>
-  <meta name="description" content="Quarterly real estate market report for Downtown, Boston, MA — The Rasner Group." />
+  <title>South End / Bay Village Market Report — The Rasner Group</title>
+  <meta name="description" content="Quarterly real estate market report for South End / Bay Village, Boston, MA — The Rasner Group." />
   <link rel="stylesheet" href="../assets/css/style.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 </head>
@@ -34,7 +34,7 @@
 <!-- ── SITE NAV ── -->
 <nav class="site-nav">
   <a class="back-link" href="../index.html">All Towns</a>
-  <a href="../index.html" style="margin-left:auto;"><img src="../assets/images/logo_white_bg.png" alt="The Rasner Group" style="height:38px;width:auto;display:block;"></a>
+  <a href="../index.html" class="brand" style="margin-left:auto;">The Rasner <span>Group</span></a>
 </nav>
 
 <!-- ── REPORT ── -->
@@ -43,8 +43,7 @@
   <header class="report-header">
     <div>
       <div class="eyebrow">Real Estate Market Report · Boston Neighborhood</div>
-      <h1>Downtown, <span>Boston</span></h1>
-      <div style="font-size:12px;color:var(--muted);margin-top:6px;letter-spacing:0.05em;">Leather District · Financial District · Chinatown · Midtown · Theatre District · Waterfront</div>
+      <h1>South End / Bay Village, <span>Boston</span></h1>
     </div>
     <div class="report-meta">Q1 2025 – Q1 2026<br />Source: MLS Closed Sales</div>
   </header>
@@ -242,7 +241,7 @@
       <div class="footer-brand">The Rasner Group · Real Estate</div>
       <div style="margin-top:3px;">ilya@rasnergroup.com &nbsp;·&nbsp; (617) 823-9780 &nbsp;·&nbsp; rasnergroup.com</div>
     </div>
-    <div style="text-align:right;">Source: MLS Closed Sales Data<br />Downtown, Boston, MA · Q1 2025 – Q1 2026</div>
+    <div style="text-align:right;">Source: MLS Closed Sales Data<br />South End / Bay Village, Boston, MA · Q1 2025 – Q1 2026</div>
   </footer>
 
 </main>
@@ -256,38 +255,38 @@ const LABELS = ["Q1 25","Q2 25","Q3 25","Q4 25","Q1 26"]; // e.g. ["Q1 25","Q2 2
 
 // ── Single Family ──────────────────────────────────────────────────────────
 const SF = {
-  labels:  ["Q1 25","Q2 25","Q3 25","Q4 25","Q1 26"],
-  avgSale: [0, 0, 0, 0, 0],
-  medSale: [0, 0, 0, 0, 0],
-  avgList: [0, 0, 0, 0, 0],
-  ratio:   [0, 0, 0, 0, 0],
-  sold:    [0, 0, 0, 0, 0],
-  dom:     [0, 0, 0, 0, 0],
-  dto:     [0, 0, 0, 0, 0],
+  labels:  ["Q1 25", "Q2 25", "Q3 25", "Q4 25", "Q1 26"],
+  avgSale: [3601667, 6065000, 3235000, 3271875, 3129000],
+  medSale: [3637500, 6065000, 3235000, 3100000, 3129000],
+  avgList: [3740333, 6675000, 3362500, 3496250, 3129000],
+  ratio:   [96.77, 96.51, 96.82, 93.0, 100.0],
+  sold:    [6, 2, 2, 4, 1],
+  dom:     [67, 120, 51, 114, 91],
+  dto:     [61, 120, 42, 106, 77],
 };
 
 // ── Condos ─────────────────────────────────────────────────────────────────
 const CONDO = {
   labels:  ["Q1 25", "Q2 25", "Q3 25", "Q4 25", "Q1 26"],
-  avgSale: [1838774, 2140993, 1728904, 1905053, 2330801],
-  medSale: [1541000, 1859432, 1282128, 1953889, 1509783],
-  avgList: [1884086, 2194350, 1796524, 1979534, 2411043],
-  ratio:   [97.19, 97.35, 96.1, 96.9, 96.11],
-  sold:    [35, 44, 47, 45, 46],
-  dom:     [72, 61, 70, 64, 94],
-  dto:     [65, 56, 60, 57, 87],
+  avgSale: [1819517, 1324740, 1342231, 2218873, 1715882],
+  medSale: [1181250, 1070000, 1045000, 1315000, 1360000],
+  avgList: [1906157, 1346746, 1368956, 2366719, 1763498],
+  ratio:   [98.69, 98.73, 98.31, 97.66, 97.73],
+  sold:    [52, 96, 72, 60, 53],
+  dom:     [60, 38, 39, 57, 63],
+  dto:     [52, 30, 30, 49, 55],
 };
 
 // ── Multi-Family ───────────────────────────────────────────────────────────
 const MF = {
-  labels:  ["Q1 25","Q2 25","Q3 25","Q4 25","Q1 26"],
-  avgSale: [0, 0, 0, 0, 0],
-  medSale: [0, 0, 0, 0, 0],
-  avgList: [0, 0, 0, 0, 0],
-  ratio:   [0, 0, 0, 0, 0],
-  sold:    [0, 0, 0, 0, 0],
-  dom:     [0, 0, 0, 0, 0],
-  dto:     [0, 0, 0, 0, 0],
+  labels:  ["Q1 25", "Q3 25", "Q4 25", "Q1 26"],
+  avgSale: [1708200, 3449500, 3543750, 2380000],
+  medSale: [1708200, 3449500, 3900000, 2380000],
+  avgList: [1974500, 3449500, 4200000, 2862500],
+  ratio:   [86.14, 101.18, 82.97, 86.04],
+  sold:    [2, 2, 4, 2],
+  dom:     [56, 34, 125, 108],
+  dto:     [45, 24, 120, 102],
 };
 </script>
 
