@@ -36,15 +36,10 @@
     .town-card:not(.no-data) .coming-soon { display: none; }
 
     /* Boston special card */
-    .town-card.boston-card { background: var(--teal-light); border-left: 3px solid var(--teal-dark); }
-    .town-card.boston-card:hover { background: #c6d9d3; }
-    .town-card.boston-card .town-card-name { color: var(--teal-dark); }
-    .town-card.boston-card::after { color: var(--teal-dark); }
-    .boston-badge {
-      display: inline-block; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
-      font-weight: 500; color: var(--white); background: var(--teal-dark);
-      padding: 2px 7px; border-radius: 2px; margin-top: 2px;
-    }
+    .town-card
+    .town-card
+    .town-card
+    .town-card
   </style>
 </head>
 <body>
@@ -111,7 +106,7 @@
   const countEl = document.getElementById('town-count');
 
   // Slugs with live report pages
-  const LIVE = new Set(['cambridge', 'arlington', 'belmont', 'boston-allston']);
+  const LIVE = new Set(['cambridge', 'arlington', 'belmont', 'boston-allston', 'boston']);
 
   let activeRegion = 'all';
 
@@ -123,14 +118,14 @@
     }
     grid.innerHTML = list.map(t => {
       const live   = LIVE.has(t.slug);
-      const isBoston = t.slug === 'boston';
-      const extraClass = isBoston ? ' boston-card' : (!live ? ' no-data' : '');
-      const tag  = live ? `<a class="town-card${extraClass}" href="towns/${t.slug}.html">` : `<div class="town-card${extraClass}">`;
-      const end  = live ? `</a>` : `</div>`;
+
+      const tag = live ? `<a class="town-card" href="towns/${t.slug}.html">` : `<div class="town-card no-data">`;
+      const end = live ? `</a>` : `</div>`;
       return `${tag}
         <div class="town-card-region">${t.region}</div>
         <div class="town-card-name">${t.name}</div>
-        ${isBoston ? '<span class="boston-badge">22 neighborhoods</span>' : `<div class="town-card-quarter">${live ? t.latestQuarter : ''}</div><div class="coming-soon">Coming soon</div>`}
+        <div class="town-card-quarter">${live ? t.latestQuarter : ''}</div>
+        <div class="coming-soon">Coming soon</div>
       ${end}`;
     }).join('');
   }
