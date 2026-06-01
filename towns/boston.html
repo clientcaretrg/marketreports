@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boston Neighborhoods Market Report — The Rasner Group</title>
+  <meta name="description" content="Quarterly real estate market report for Boston neighborhoods — The Rasner Group." />
+  <link rel="stylesheet" href="../assets/css/style.css" />
+  <script>
+// Dynamically load Chart.js then initialize everything
+(function() {
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+  s.onload = function() {
+    // Set Chart defaults after library is confirmed loaded
+    Chart.defaults.font.family = "'DM Sans', sans-serif";
+    Chart.defaults.font.size   = 11;
+    Chart.defaults.color       = '#7a8a87';
+    // Signal ready
+    document.dispatchEvent(new Event('chartjs-ready'));
+  };
+  document.head.appendChild(s);
+})();
+</script>
+  <style>
+    /* ── Neighborhood selector ── */
+    .nbhd-layout {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 0;
+      margin-top: 24px;
+      border: 1px solid var(--border);
+      background: var(--border);
+    }
+
+    .nbhd-sidebar {
+      background: var(--white);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+    }
+
+    .nbhd-sidebar-header {
+      padding: 14px 18px;
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 500;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .nbhd-btn {
+      width: 100%;
+      text-align: left;
+      background: var(--white);
+      border: none;
+      border-bottom: 1px solid var(--teal-light);
+      padding: 11px 18px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      color: var(--ink);
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+      line-height: 1.3;
+      position: relative;
+    }
+    .nbhd-btn:last-child { border-bottom: none; }
+    .nbhd-btn:hover { background: var(--teal-light); }
+    .nbhd-btn.active {
+      background: var(--teal-dark);
+      color: var(--white);
+      font-weight: 500;
+    }
+    .nbhd-btn.active::after {
+      content: '';
+      position: absolute;
+      right: -1px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0; height: 0;
+      border-top: 8px solid transparent;
+      border-bottom: 8px solid transparent;
+      border-right: 8px solid var(--bg);
+    }
+    .nbhd-btn .nbhd-no-data {
+      display: block;
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 2px;
+      font-weight: 400;
+    }
+    .nbhd-btn.active .nbhd-no-data { color: rgba(255,255,255,0.5); }
+
+    /* ── Neighborhood panels ── */
+    .nbhd-panel-wrap {
+      background: var(--bg);
+      padding: 24px;
+      min-height: 500px;
+    }
+
+    .nbhd-panel { display: none; }
+    .nbhd-panel.active { display: block; }
+
+    .nbhd-panel-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 14px;
+      margin-bottom: 0;
+    }
+    .nbhd-panel-header .eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--muted);
+      font-weight: 500;
+      margin-bottom: 5px;
+    }
+    .nbhd-panel-header h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(20px, 3vw, 30px);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+    .nbhd-panel-header h2 span { color: var(--teal-dark); }
+    .nbhd-panel-meta { text-align: right; font-size: 11px; color: var(--muted); line-height: 1.9; }
+
+    /* Placeholder state */
+    .nbhd-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 360px;
+      gap: 16px;
+      color: var(--muted);
+    }
+    .nbhd-placeholder-icon {
+      width: 56px; height: 56px;
+      border-radius: 50%;
+      background: var(--teal-light);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .nbhd-placeholder h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--ink);
+    }
+    .nbhd-placeholder p { font-size: 13px; text-align: center; max-width: 300px; line-height: 1.6; }
+
+    /* Mobile collapse */
+    @media (max-width: 680px) {
+      .nbhd-layout { grid-template-columns: 1fr; }
+      .nbhd-sidebar { display: grid; grid-template-columns: 1fr 1fr; border-right: none; border-bottom: 1px solid var(--border); }
+      .nbhd-sidebar-header { grid-column: 1 / -1; }
+      .nbhd-btn.active::after { display: none; }
+      .nbhd-panel-wrap { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="site-nav">
+  <a class="back-link" href="../index.html">All Towns</a>
+  <a href="../index.html" class="brand" style="margin-left:auto;">The Rasner <span>Group</span></a>
+</nav>
+
+<!-- MAIN -->
+<main class="page-body">
+
+  <header class="report-header">
+    <div>
+      <div class="eyebrow">Real Estate Market Report · Boston, MA</div>
+      <h1>Boston, <span>MA</span></h1>
+    </div>
+    <div class="report-meta">Q1 2025 – Q1 2026<br />Source: MLS Closed Sales</div>
+  </header>
+
+  <!-- Property type tabs (apply to whichever neighborhood is active) -->
+  <nav class="section-nav">
+    <button class="nav-tab active" data-section="sf">Single Family</button>
+    <button class="nav-tab" data-section="condo">Condos</button>
+    <button class="nav-tab" data-section="mf">Multi-Family</button>
+  </nav>
+
+  <!-- Neighborhood selector + panels -->
+  <div class="nbhd-layout">
+
+    <!-- Sidebar list -->
+    <aside class="nbhd-sidebar">
+      <div class="nbhd-sidebar-header">Select Neighborhood</div>
+      <button class="nbhd-btn active"         data-nbhd="allston">Allston</button>
+      <button class="nbhd-btn"                data-nbhd="back-bay">Back Bay</button>
+      <button class="nbhd-btn"                data-nbhd="beacon-hill">Beacon Hill</button>
+      <button class="nbhd-btn"                data-nbhd="brighton">Brighton</button>
+      <button class="nbhd-btn"                data-nbhd="charlestown">Charlestown</button>
+      <button class="nbhd-btn"                data-nbhd="dorchester">Dorchester</button>
+      <button class="nbhd-btn"                data-nbhd="east-boston">East Boston</button>
+      <button class="nbhd-btn"                data-nbhd="fenway">Fenway / Kenmore Sq.</button>
+      <button class="nbhd-btn"                data-nbhd="hyde-park">Hyde Park</button>
+      <button class="nbhd-btn"                data-nbhd="jamaica-plain">Jamaica Plain</button>
+      <button class="nbhd-btn"                data-nbhd="leather-district">Leather / Financial / Chinatown</button>
+      <button class="nbhd-btn"                data-nbhd="mattapan">Mattapan</button>
+      <button class="nbhd-btn"                data-nbhd="midtown">Midtown / Theatre District</button>
+      <button class="nbhd-btn"                data-nbhd="mission-hill">Mission Hill</button>
+      <button class="nbhd-btn"                data-nbhd="north-end">North End</button>
+      <button class="nbhd-btn"                data-nbhd="roslindale">Roslindale</button>
+      <button class="nbhd-btn"                data-nbhd="roxbury">Roxbury</button>
+      <button class="nbhd-btn"                data-nbhd="seaport">Seaport District</button>
+      <button class="nbhd-btn"                data-nbhd="south-boston">South Boston</button>
+      <button class="nbhd-btn"                data-nbhd="south-end">South End / Bay Village</button>
+      <button class="nbhd-btn"                data-nbhd="waterfront">Waterfront</button>
+      <button class="nbhd-btn"                data-nbhd="west-end">West End</button>
+      <button class="nbhd-btn"                data-nbhd="west-roxbury">West Roxbury</button>
+    </aside>
+
+    <!-- Panel area -->
+    <div class="nbhd-panel-wrap" id="nbhd-panels">
+      <!-- Panels are injected by JS below -->
+    </div>
+
+  </div><!-- /.nbhd-layout -->
+
+  <!-- Report footer -->
+  <footer class="report-footer" style="margin-top:24px;">
+    <div>
+      <div class="footer-brand">
+        <img src="../assets/images/trg_logo_white.png" alt="The Rasner Group" style="height:28px;width:auto;mix-blend-mode:screen;vertical-align:middle;" />
+        The Rasner Group · Real Estate
+      </div>
+      <div style="margin-top:3px;">ilya@rasnergroup.com &nbsp;·&nbsp; (617) 823-9780 &nbsp;·&nbsp; rasnergroup.com</div>
+    </div>
+    <div style="text-align:right;">Source: MLS Closed Sales Data<br />Boston, MA · Q1 2025 – Q1 2026</div>
+  </footer>
+
+</main>
+
+<!-- ══════════════════════════════════════════════════════════════════════════
+     NEIGHBORHOOD DATA
+     For each neighborhood, populate SF / CONDO / MF objects.
+     Leave arrays as [0,0,0,0,0] until data is available — the panel will
+     show a "Coming Soon" placeholder automatically.
+     ══════════════════════════════════════════════════════════════════════════ -->
+<script>
+const LABELS = ["Q1 25","Q2 25","Q3 25","Q4 25","Q1 26"];
+
+// Helper: is a dataset empty / all zeros?
+const isEmpty = arr => !arr || arr.every(v => !v);
+
+const NEIGHBORHOODS = {
+  'allston': {
+    name: 'Allston',
+    sf:    { labels:LABELS, avgSale:[976500,0,973362,890000,1000000], medSale:[976500,0,940000,880000,1000000], avgList:[1032000,0,992980,939633,1050000], ratio:[95.06,0,97.91,94.28,95.24], sold:[2,0,5,3,1], dom:[22,0,63,45,46], dto:[22,0,53,39,46] },
+    condo: { labels:LABELS, avgSale:[650809,570262,605779,532278,632038], medSale:[680000,585000,597500,450000,520000], avgList:[641709,573472,614779,549654,651531], ratio:[101.30,99.76,98.31,96.30,96.55], sold:[11,25,14,9,13], dom:[35,51,48,54,41], dto:[25,43,38,47,33] },
+    mf:    { labels:LABELS, avgSale:[1172000,1895000,1499500,1776920,1624000], medSale:[1172000,1470000,1499500,1600000,1220000], avgList:[1195000,1929571,1549500,1823800,1699667], ratio:[98.08,99.11,97.50,97.43,96.77], sold:[1,7,2,5,3], dom:[117,47,41,41,38], dto:[117,33,30,35,22] },
+  },
+  'back-bay': {
+    name: 'Back Bay',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'beacon-hill': {
+    name: 'Beacon Hill',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'brighton': {
+    name: 'Brighton',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'charlestown': {
+    name: 'Charlestown',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'dorchester': {
+    name: 'Dorchester',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'east-boston': {
+    name: 'East Boston',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'fenway': {
+    name: 'Fenway / Kenmore Square',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'hyde-park': {
+    name: 'Hyde Park',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'jamaica-plain': {
+    name: 'Jamaica Plain',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'leather-district': {
+    name: 'Leather District / Financial District / Chinatown',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'mattapan': {
+    name: 'Mattapan',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'midtown': {
+    name: 'Midtown / Theatre District',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'mission-hill': {
+    name: 'Mission Hill',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'north-end': {
+    name: 'North End',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'roslindale': {
+    name: 'Roslindale',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'roxbury': {
+    name: 'Roxbury',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'seaport': {
+    name: 'Seaport District',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'south-boston': {
+    name: 'South Boston',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'south-end': {
+    name: 'South End / Bay Village',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'waterfront': {
+    name: 'Waterfront',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'west-end': {
+    name: 'West End',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+  'west-roxbury': {
+    name: 'West Roxbury',
+    sf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    condo: { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+    mf:    { labels:LABELS, avgSale:[0,0,0,0,0], medSale:[0,0,0,0,0], avgList:[0,0,0,0,0], ratio:[0,0,0,0,0], sold:[0,0,0,0,0], dom:[0,0,0,0,0], dto:[0,0,0,0,0] },
+  },
+};
+</script>
+
+<!-- Chart library + rendering engine -->
+<script src="../assets/js/report-charts.js"></script>
+<script>
+document.addEventListener('chartjs-ready', function() {
+
+  // ── Helpers ────────────────────────────────────────────────────────────
+  const fmtM  = v => v >= 1e6 ? '$'+(v/1e6).toFixed(2)+'M' : v ? '$'+(v/1000).toFixed(0)+'K' : '—';
+  const last  = a => a[a.length-1];
+  const prev  = a => a[a.length-2];
+  const pct   = (a,b) => b ? ((a-b)/b*100).toFixed(1) : null;
+  const empty = a => !a || a.every(v => !v);
+
+  function priceRange(d) {
+    const all = [...d.avgSale,...d.medSale,...d.avgList].filter(Boolean);
+    if (!all.length) return [0,1000000];
+    const mn=Math.min(...all), mx=Math.max(...all), pad=(mx-mn)*0.15||mx*0.2;
+    return [Math.max(0,Math.floor((mn-pad)/50000)*50000), Math.ceil((mx+pad)/50000)*50000];
+  }
+  function ratioRange(d) {
+    const all = d.ratio.filter(Boolean);
+    if (!all.length) return [95,110];
+    return [Math.floor(Math.min(...all)-2), Math.ceil(Math.max(...all)+2)];
+  }
+  function makeId(nbhd, type, chart) { return `${nbhd}__${type}__${chart}`; }
+
+  // ── KPI helpers ─────────────────────────────────────────────────────────
+  function setEl(id, val) { const e=document.getElementById(id); if(e) e.textContent=val; }
+  function setChg(id, label, isDown) {
+    const e=document.getElementById(id);
+    if(!e) return;
+    e.textContent=label;
+    e.className='kpi-change'+(isDown?' down':'');
+  }
+  function fillKpis(slug, type, d) {
+    if (empty(d.avgSale)) return;
+    const pre=makeId(slug,type,'');
+    const a=last(d.avgSale), ap=prev(d.avgSale);
+    const m=last(d.medSale), mp=prev(d.medSale);
+    const r=last(d.ratio), dom=last(d.dom), domp=prev(d.dom);
+    setEl(pre+'kpi-avg', fmtM(a));
+    setEl(pre+'kpi-med', fmtM(m));
+    setEl(pre+'kpi-ratio', r ? r.toFixed(1)+'%' : '—');
+    setEl(pre+'kpi-dom', dom ? dom+' days' : '—');
+    if(ap){const d1=pct(a,ap); setChg(pre+'kpi-avg-chg',`${+d1>0?'↑':'↓'} vs prior quarter`,+d1<0);}
+    if(mp){const d2=pct(m,mp); setChg(pre+'kpi-med-chg',`${+d2>0?'↑':'↓'} quarter over quarter`,+d2<0);}
+    if(r){
+      const lbl=r>=101?"Sellers' market":r>=99?'Near asking':"Buyers' market";
+      const e=document.getElementById(pre+'kpi-ratio-lbl');
+      if(e){e.textContent=lbl;e.className='kpi-change neutral';}
+    }
+    if(dom&&domp){const dd=pct(dom,domp);setChg(pre+'kpi-dom-lbl',`${+dd>0?'↑':'↓'} vs prior quarter`,+dd>0);}
+  }
+
+  // ── HTML builders ───────────────────────────────────────────────────────
+  function sectionHTML(nbhd, type, typeName, unitLabel) {
+    const p = makeId(nbhd,type,'');
+    return `
+      <div class="report-section ${type==='sf'?'active':''}" id="nbhd-section-${nbhd}-${type}">
+        <div class="kpi-strip">
+          <div class="kpi dark">
+            <div class="kpi-label">Latest Avg Sale Price</div>
+            <div class="kpi-value" id="${p}kpi-avg">—</div>
+            <div class="kpi-change" id="${p}kpi-avg-chg"></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Latest Median Sale</div>
+            <div class="kpi-value" id="${p}kpi-med">—</div>
+            <div class="kpi-change" id="${p}kpi-med-chg"></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Sale-to-List Ratio</div>
+            <div class="kpi-value" id="${p}kpi-ratio">—</div>
+            <div class="kpi-change" id="${p}kpi-ratio-lbl"></div>
+          </div>
+          <div class="kpi">
+            <div class="kpi-label">Avg Days on Market</div>
+            <div class="kpi-value" id="${p}kpi-dom">—</div>
+            <div class="kpi-change" id="${p}kpi-dom-lbl"></div>
+          </div>
+        </div>
+        <div class="chart-grid wide">
+          <div class="card">
+            <div class="card-label">Pricing Trends</div>
+            <div class="card-title">Average &amp; Median Sale Price</div>
+            <div class="chart-wrap"><canvas id="${p}price"></canvas></div>
+            <div class="legend-row">
+              <div class="legend-item"><div class="legend-dot" style="background:#295c6f"></div>Avg Sale</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#71a495"></div>Median Sale</div>
+              <div class="legend-item"><div style="width:16px;height:2px;background:#bbb;flex-shrink:0"></div>Avg List</div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-label">Offer Competitiveness</div>
+            <div class="card-title">Sale-to-List Ratio</div>
+            <div class="chart-wrap"><canvas id="${p}ratio"></canvas></div>
+            <div class="chart-note">Values above 100% indicate overbidding.</div>
+          </div>
+        </div>
+        <div class="chart-grid">
+          <div class="card">
+            <div class="card-label">Market Activity</div>
+            <div class="card-title">${unitLabel} Sold per Quarter</div>
+            <div class="chart-wrap"><canvas id="${p}sold"></canvas></div>
+          </div>
+          <div class="card">
+            <div class="card-label">Time on Market</div>
+            <div class="card-title">Days on Market vs Days to Offer</div>
+            <div class="chart-wrap"><canvas id="${p}dom"></canvas></div>
+            <div class="legend-row">
+              <div class="legend-item"><div class="legend-dot" style="background:#295c6f"></div>Days on Market</div>
+              <div class="legend-item"><div class="legend-dot" style="background:#71a495"></div>Days to Offer</div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function placeholderHTML(name) {
+    return `
+      <div class="nbhd-placeholder">
+        <div class="nbhd-placeholder-icon">📍</div>
+        <h3>${name}</h3>
+        <p>Market data for this neighborhood will be available soon.</p>
+        <a href="mailto:ilya@rasnergroup.com?subject=Boston ${name} Market Report"
+           style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;font-weight:500;color:var(--teal-dark);border:1px solid var(--teal-dark);padding:8px 18px;">Request Data</a>
+      </div>`;
+  }
+
+  // ── Build panels ────────────────────────────────────────────────────────
+  const panelWrap = document.getElementById('nbhd-panels');
+  let firstPanel = true;
+  for (const [slug, nbhd] of Object.entries(NEIGHBORHOODS)) {
+    const hasData = !empty(nbhd.sf.avgSale) || !empty(nbhd.condo.avgSale) || !empty(nbhd.mf.avgSale);
+    const div = document.createElement('div');
+    div.className = 'nbhd-panel' + (firstPanel ? ' active' : '');
+    div.id = `panel-${slug}`;
+    div.innerHTML = `
+      <div class="nbhd-panel-header">
+        <div>
+          <div class="eyebrow">Boston, MA</div>
+          <h2>${nbhd.name}</h2>
+        </div>
+        <div class="nbhd-panel-meta">Q1 2025 – Q1 2026<br />MLS Closed Sales</div>
+      </div>
+      ${hasData
+        ? sectionHTML(slug,'sf','Single Family','Homes') + sectionHTML(slug,'condo','Condos','Units') + sectionHTML(slug,'mf','Multi-Family','Properties')
+        : placeholderHTML(nbhd.name)
+      }`;
+    panelWrap.appendChild(div);
+    firstPanel = false;
+  }
+
+  // ── Chart rendering (lazy) ──────────────────────────────────────────────
+  const rendered = new Set();
+  function renderNeighborhood(slug) {
+    if (rendered.has(slug)) return;
+    rendered.add(slug);
+    const nbhd = NEIGHBORHOODS[slug];
+    if (!nbhd) return;
+    [['sf'],['condo'],['mf']].forEach(([type]) => {
+      const d = nbhd[type];
+      if (empty(d.avgSale)) return;
+      fillKpis(slug, type, d);
+      const pre = makeId(slug, type, '');
+      const [pMin,pMax] = priceRange(d);
+      const [rMin,rMax] = ratioRange(d);
+      RasnerCharts.makePrice(pre+'price', d, pMin, pMax);
+      RasnerCharts.makeRatio(pre+'ratio', d, rMin, rMax);
+      RasnerCharts.makeSold(pre+'sold', d);
+      RasnerCharts.makeDom(pre+'dom', d);
+    });
+  }
+
+  // Render first neighborhood
+  renderNeighborhood('allston');
+
+  // ── Sidebar clicks ──────────────────────────────────────────────────────
+  let activePropertyType = 'sf';
+
+  function syncPropertyTabs(panel) {
+    document.querySelectorAll('.nav-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.section === activePropertyType);
+    });
+    if (!panel) return;
+    panel.querySelectorAll('.report-section').forEach(s => s.classList.remove('active'));
+    const activeSlug = document.querySelector('.nbhd-btn.active')?.dataset.nbhd;
+    const sec = document.getElementById(`nbhd-section-${activeSlug}-${activePropertyType}`);
+    if (sec) sec.classList.add('active');
+  }
+
+  document.querySelectorAll('.nbhd-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const slug = btn.dataset.nbhd;
+      document.querySelectorAll('.nbhd-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.nbhd-panel').forEach(p => p.classList.remove('active'));
+      const panel = document.getElementById(`panel-${slug}`);
+      if (panel) {
+        panel.classList.add('active');
+        activePropertyType = 'sf';
+        syncPropertyTabs(panel);
+      }
+      renderNeighborhood(slug);
+    });
+  });
+
+  document.querySelectorAll('.nav-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activePropertyType = btn.dataset.section;
+      const activePanel = document.querySelector('.nbhd-panel.active');
+      syncPropertyTabs(activePanel);
+    });
+  });
+
+}); // end chartjs-ready
+</script>
+</body>
+</html>
