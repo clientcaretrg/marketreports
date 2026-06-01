@@ -13,9 +13,8 @@ const RC = {
   grid: { color:'rgba(0,0,0,0.05)', drawBorder:false },
 };
 
-Chart.defaults.font.family = "'DM Sans', sans-serif";
-Chart.defaults.font.size   = 11;
-Chart.defaults.color       = RC.muted;
+// Chart.defaults are set by the dynamic loader in each page
+// before the chartjs-ready event fires
 
 // ─── Formatters ──────────────────────────────────────────────────────────────
 const fmtM = v => v >= 1e6 ? '$'+(v/1e6).toFixed(2)+'M' : '$'+(v/1000).toFixed(0)+'K';
