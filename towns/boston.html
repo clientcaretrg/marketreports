@@ -6,7 +6,22 @@
   <title>Boston Neighborhoods Market Report — The Rasner Group</title>
   <meta name="description" content="Quarterly real estate market report for Boston neighborhoods — The Rasner Group." />
   <link rel="stylesheet" href="../assets/css/style.css" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script>
+// Dynamically load Chart.js then initialize everything
+(function() {
+  var s = document.createElement('script');
+  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js';
+  s.onload = function() {
+    // Set Chart defaults after library is confirmed loaded
+    Chart.defaults.font.family = "'DM Sans', sans-serif";
+    Chart.defaults.font.size   = 11;
+    Chart.defaults.color       = '#7a8a87';
+    // Signal ready
+    document.dispatchEvent(new Event('chartjs-ready'));
+  };
+  document.head.appendChild(s);
+})();
+</script>
   <style>
     /* ── Neighborhood selector ── */
     .nbhd-layout {
@@ -545,7 +560,7 @@ const NEIGHBORHOODS = {
   }
 
   // Activate the first neighborhood on load
-  window.addEventListener('load', function() {
+  document.addEventListener('chartjs-ready', function() {
   // Build & inject all panels on load
   const panelWrap = document.getElementById('nbhd-panels');
   let firstPanel = true;
@@ -619,7 +634,7 @@ const NEIGHBORHOODS = {
       syncPropertyTabs(activePanel);
     });
   });
-  }); // end load
+  }); // end chartjs-ready
 </script>
 
 </body>
