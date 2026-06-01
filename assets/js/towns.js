@@ -1,20 +1,11 @@
 /**
  * The Rasner Group — Town Registry
- *
- * To ADD a new town:
- *   1. Add an entry to this array.
- *   2. Create towns/<slug>.html using towns/_TEMPLATE.html.
- *
- * slug        — filename in /towns/ without .html (lowercase, hyphens for spaces)
- * name        — display name
- * region      — grouping label shown on card
- * latestQuarter — human-readable latest data period
  */
 
 const TOWNS = [
+  // ── Greater Boston ──────────────────────────────────────────────────────
   { slug:'arlington',   name:'Arlington',   region:'Greater Boston', latestQuarter:'Q1 2026' },
   { slug:'belmont',     name:'Belmont',     region:'Greater Boston', latestQuarter:'Q1 2026' },
-  { slug:'boston',      name:'Boston',      region:'Greater Boston', latestQuarter:'Q1 2026' },
   { slug:'braintree',   name:'Braintree',   region:'South Shore',    latestQuarter:'Q1 2026' },
   { slug:'brookline',   name:'Brookline',   region:'Greater Boston', latestQuarter:'Q1 2026' },
   { slug:'burlington',  name:'Burlington',  region:'Greater Boston', latestQuarter:'Q1 2026' },
@@ -56,4 +47,29 @@ const TOWNS = [
   { slug:'winchester',  name:'Winchester',  region:'Greater Boston', latestQuarter:'Q1 2026' },
   { slug:'winthrop',    name:'Winthrop',    region:'Greater Boston', latestQuarter:'Q1 2026' },
   { slug:'woburn',      name:'Woburn',      region:'Greater Boston', latestQuarter:'Q1 2026' },
+
+  // ── Boston Neighborhoods ─────────────────────────────────────────────────
+  { slug:'boston-allston',          name:'Allston',                              region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-back-bay',         name:'Back Bay',                             region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-beacon-hill',      name:'Beacon Hill',                          region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-brighton',         name:'Brighton',                             region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-charlestown',      name:'Charlestown',                          region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-dorchester',       name:'Dorchester',                           region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-east-boston',      name:'East Boston',                          region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-fenway',           name:'Fenway / Kenmore Square',              region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-hyde-park',        name:'Hyde Park',                            region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-jamaica-plain',    name:'Jamaica Plain',                        region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-leather-district', name:'Leather / Financial / Chinatown',      region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-mattapan',         name:'Mattapan',                             region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-midtown',          name:'Midtown / Theatre District',           region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-mission-hill',     name:'Mission Hill',                         region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-north-end',        name:'North End',                            region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-roslindale',       name:'Roslindale',                           region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-roxbury',          name:'Roxbury',                              region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-seaport',          name:'Seaport District',                     region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-south-boston',     name:'South Boston',                         region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-south-end',        name:'South End / Bay Village',              region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-waterfront',       name:'Waterfront',                           region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-west-end',         name:'West End',                             region:'Boston', latestQuarter:'Q1 2026' },
+  { slug:'boston-west-roxbury',     name:'West Roxbury',                         region:'Boston', latestQuarter:'Q1 2026' },
 ];
