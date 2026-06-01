@@ -34,7 +34,6 @@ const TOWNS = [
   { slug:'boston-seaport',          name:'Seaport District',                region:'Boston', latestQuarter:'Q1 2026' },
   { slug:'boston-south-boston',     name:'South Boston',                    region:'Boston', latestQuarter:'Q1 2026' },
   { slug:'boston-south-end',        name:'South End / Bay Village',         region:'Boston', latestQuarter:'Q1 2026' },
-  { slug:'boston-waterfront',       name:'Waterfront',                      region:'Boston', latestQuarter:'Q1 2026' },
   { slug:'boston-west-end',         name:'West End',                        region:'Boston', latestQuarter:'Q1 2026' },
   { slug:'boston-west-roxbury',     name:'West Roxbury',                    region:'Boston', latestQuarter:'Q1 2026' },
   { slug:'braintree',   name:'Braintree',   region:'South Shore',    latestQuarter:'Q1 2026' },
