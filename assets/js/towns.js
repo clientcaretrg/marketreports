@@ -12,8 +12,8 @@
  */
 
 const TOWNS = [
-  { slug:'bedford',     name:'Bedford',     region:'Greater Boston', latestQuarter:'Q1 2026' },
   { slug:'arlington',   name:'Arlington',   region:'Greater Boston', latestQuarter:'Q1 2026' },
+  { slug:'bedford',     name:'Bedford',     region:'Greater Boston', latestQuarter:'Q1 2026' },
   { slug:'belmont',     name:'Belmont',     region:'Greater Boston', latestQuarter:'Q1 2026' },
   // ── Boston Neighborhoods ───────────────────────────────────────────────────
   { slug:'boston-allston',          name:'Allston',                         region:'Boston', latestQuarter:'Q1 2026' },
