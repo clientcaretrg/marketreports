@@ -12,7 +12,7 @@
        Wilmington         → Newton
        MA             → MA
        wilmington              → newton
-       Q1 2025 – Q1 2026        → Q1 2025 – Q1 2026
+       Q1 2025 – Q2 2026        → Q1 2025 – Q2 2026
        ["Q1 25","Q2 25","Q3 25","Q4 25","Q1 26"]       → ["Q1 25","Q2 25","Q3 25","Q4 25","Q1 26"]
 
   3. Fill in the DATA CONSTANTS section at the bottom with real MLS numbers.
@@ -45,7 +45,7 @@
       <div class="eyebrow">Real Estate Market Report · Wilmington, MA</div>
       <h1>Wilmington, <span>MA</span></h1>
     </div>
-    <div class="report-meta">Q1 2025 – Q1 2026<br />Source: MLS Closed Sales</div>
+    <div class="report-meta">Q1 2025 – Q2 2026<br />Source: MLS Closed Sales</div>
   </header>
 
   <!-- ── PROPERTY TYPE TABS ── -->
@@ -241,7 +241,7 @@
       <div class="footer-brand">The Rasner Group · Real Estate</div>
       <div style="margin-top:3px;">ilya@rasnergroup.com &nbsp;·&nbsp; (617) 823-9780 &nbsp;·&nbsp; rasnergroup.com</div>
     </div>
-    <div style="text-align:right;">Source: MLS Closed Sales Data<br />Wilmington, MA · Q1 2025 – Q1 2026</div>
+    <div style="text-align:right;">Source: MLS Closed Sales Data<br />Wilmington, MA · Q1 2025 – Q2 2026</div>
   </footer>
 
 </main>
@@ -255,26 +255,26 @@ const LABELS = ["Q1 25","Q2 25","Q3 25","Q4 25","Q1 26"]; // e.g. ["Q1 25","Q2 2
 
 // ── Single Family ──────────────────────────────────────────────────────────
 const SF = {
-  labels:  LABELS,
-  avgSale: [793742, 837445, 817067, 802472, 818795],
-  medSale: [710000, 780500, 770000, 770000, 740000],
-  avgList: [761852, 810484, 801332, 797352, 809155],
-  ratio:   [105.08, 103.48, 102.52, 101.23, 101.8],
-  sold:    [27, 44, 52, 40, 20],
-  dom:     [26, 17, 26, 29, 41],
-  dto:     [18, 10, 19, 21, 31],
+  labels:  ["Q1 25", "Q2 25", "Q3 25", "Q4 25", "Q1 26", "Q2 26"],
+  avgSale: [793742, 837445, 817067, 802472, 818795, 836267],
+  medSale: [710000, 780500, 770000, 770000, 740000, 810000],
+  avgList: [761852, 810484, 801332, 797352, 809155, 801073],
+  ratio:   [105.08, 103.48, 102.52, 101.23, 101.8, 104.39],
+  sold:    [27, 44, 52, 40, 20, 51],
+  dom:     [26, 17, 26, 29, 41, 25],
+  dto:     [18, 10, 19, 21, 31, 13],
 };
 
 // ── Condos ─────────────────────────────────────────────────────────────────
 const CONDO = {
-  labels:  LABELS,
-  avgSale: [620395, 648675, 614825, 570993, 642250],
-  medSale: [650000, 644750, 625000, 606986, 642250],
-  avgList: [619526, 646538, 611233, 571468, 644250],
-  ratio:   [100.12, 100.33, 100.51, 99.8, 99.66],
-  sold:    [19, 8, 12, 4, 2],
-  dom:     [24, 24, 14, 34, 34],
-  dto:     [13, 12, 10, 25, 21],
+  labels:  ["Q1 25", "Q2 25", "Q3 25", "Q4 25", "Q1 26", "Q2 26"],
+  avgSale: [620395, 648675, 614825, 570993, 642250, 607083],
+  medSale: [650000, 644750, 625000, 606986, 642250, 611250],
+  avgList: [619526, 646538, 611233, 571468, 644250, 611617],
+  ratio:   [100.12, 100.33, 100.51, 99.8, 99.66, 99.26],
+  sold:    [19, 8, 12, 4, 2, 6],
+  dom:     [24, 24, 14, 34, 34, 14],
+  dto:     [13, 12, 10, 25, 21, 10],
 };
 
 // ── Multi-Family ───────────────────────────────────────────────────────────
