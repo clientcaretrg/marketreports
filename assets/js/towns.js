@@ -13,6 +13,7 @@
 
 const TOWNS = [
   { slug:'arlington',   name:'Arlington',   region:'Greater Boston', latestQuarter:'Q2 2026' },
+  { slug:'ashland',     name:'Ashland',     region:'MetroWest',      latestQuarter:'Q2 2026' },
   { slug:'bedford',     name:'Bedford',     region:'Greater Boston', latestQuarter:'Q2 2026' },
   { slug:'belmont',     name:'Belmont',     region:'Greater Boston', latestQuarter:'Q2 2026' },
   // ── Boston Neighborhoods ───────────────────────────────────────────────────
