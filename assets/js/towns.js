@@ -16,6 +16,7 @@ const TOWNS = [
   { slug:'ashland',     name:'Ashland',     region:'MetroWest',      latestQuarter:'Q2 2026' },
   { slug:'bedford',     name:'Bedford',     region:'Greater Boston', latestQuarter:'Q2 2026' },
   { slug:'belmont',     name:'Belmont',     region:'Greater Boston', latestQuarter:'Q2 2026' },
+  { slug:'boston-all',  name:'Boston',      region:'Boston (Citywide)', latestQuarter:'Q2 2026' },
   // ── Boston Neighborhoods ───────────────────────────────────────────────────
   { slug:'boston-allston',          name:'Allston',                         region:'Boston', latestQuarter:'Q2 2026' },
   { slug:'boston-back-bay',         name:'Back Bay',                        region:'Boston', latestQuarter:'Q2 2026' },
