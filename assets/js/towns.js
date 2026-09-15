@@ -63,6 +63,7 @@ const TOWNS = [
   { slug:'peabody',     name:'Peabody',     region:'North Shore',    latestQuarter:'Q2 2026' },
   { slug:'quincy',      name:'Quincy',      region:'South Shore',    latestQuarter:'Q2 2026' },
   { slug:'randolph',    name:'Randolph',    region:'South Shore',    latestQuarter:'Q2 2026' },
+  { slug:'reading',     name:'Reading',     region:'North Shore',    latestQuarter:'Q2 2026' },
   { slug:'revere',      name:'Revere',      region:'Greater Boston', latestQuarter:'Q2 2026' },
   { slug:'salem',       name:'Salem',       region:'North Shore',    latestQuarter:'Q2 2026' },
   { slug:'saugus',      name:'Saugus',      region:'North Shore',    latestQuarter:'Q2 2026' },
